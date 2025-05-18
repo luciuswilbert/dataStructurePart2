@@ -182,7 +182,8 @@ int main() {
         cout << "\n------ Tournament Registration (Circular Queue) ------\n";
         cout << "1. Register Player\n";
         cout << "2. Display All Players\n";
-        cout << "3. Exit\n";
+        cout << "3. Player Check-In\n";
+        cout << "4. Exit\n";
         cout << "-----------------------------------------------------\n";
         cout << "Enter your choice: ";
         int choice;
@@ -216,6 +217,52 @@ int main() {
             displayCSV(CSV_FILE); // Always read and display fresh from CSV
         }
         else if (choice == 3) {
+            int idToCheckIn;
+            cout << "Enter Player ID to check-in: ";
+            cin >> idToCheckIn;
+            cin.ignore();
+
+            ifstream inFile(CSV_FILE);
+            ofstream tempFile("temp.csv");
+            bool found = false;
+
+            string line;
+            while (getline(inFile, line)) {
+                stringstream ss(line);
+                string idStr, username, rank, university, checkInStatus, registrationTime, isWildcard;
+                getline(ss, idStr, ',');
+                getline(ss, username, ',');
+                getline(ss, rank, ',');
+                getline(ss, university, ',');
+                getline(ss, checkInStatus, ',');
+                getline(ss, registrationTime, ',');
+                getline(ss, isWildcard, ',');
+
+                if (stoi(idStr) == idToCheckIn) {
+                    checkInStatus = "1";
+                    found = true;
+                    cout << "Player ID " << idToCheckIn << " has been checked in.\n";
+                }
+
+                tempFile << idStr << ","
+                        << username << ","
+                        << rank << ","
+                        << university << ","
+                        << checkInStatus << ","
+                        << registrationTime << ","
+                        << isWildcard << "\n";
+            }
+
+            inFile.close();
+            tempFile.close();
+            remove(CSV_FILE.c_str());
+            rename("temp.csv", CSV_FILE.c_str());
+
+            if (!found) {
+                cout << "Player ID not found.\n";
+            }
+        }
+        else if (choice == 4) {
             running = false;
             cout << "Goodbye!\n";
         }
