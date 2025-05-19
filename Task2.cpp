@@ -190,6 +190,45 @@ public:
     }
 
     int getNextID() const { return nextID; }
+
+    bool exists(int id) {
+        if (!front) return false;
+        Player* curr = front;
+        do {
+            if (curr->playerID == id) return true;
+            curr = curr->next;
+        } while (curr != front);
+        return false;
+    }
+
+    void displayPlayer(int id) {
+        if (!front) {
+            cout << "No players in queue.\n";
+            return;
+        }
+        Player* curr = front;
+        do {
+            if (curr->playerID == id) {
+                cout << "\n" << string(50, '=') << "\n";
+                cout << "Your Player Info\n";
+                cout << string(50, '=') << "\n";
+                cout << "ID           : " << curr->playerID << "\n";
+                cout << "Username     : " << curr->username << "\n";
+                cout << "Rank         : " << curr->rank << "\n";
+                cout << "University   : " << curr->university << "\n";
+                cout << "Registered   : " << curr->registrationTime << "\n";
+                cout << "Check-In     : " << (curr->checkInStatus ? "Checked-In" : "Not Checked-In") << "\n";
+                cout << "Wildcard     : " << (curr->isWildcard ? "Yes" : "No") << "\n";
+                cout << "Queue Status : " << (curr->inTournament ? "In Tournament" : "Waiting") << "\n";
+                cout << string(50, '=') << "\n";
+                return;
+            }
+            curr = curr->next;
+        } while (curr != front);
+        cout << "Player ID not found.\n";
+    }
+
+
 };
 
 int main() {
@@ -239,8 +278,14 @@ int main() {
             cout << "Enter your Player ID: ";
             cin >> currentPlayerID;
             cin.ignore();
-            userRole = "player";
-            break;
+
+            if (queue.exists(currentPlayerID)) {
+                cout << "Successfully logged in as Player ID: " << currentPlayerID << endl;
+                userRole = "player";
+                break;
+            } else {
+                cout << "Player ID not found. Please try again.\n";
+            }
         }
         else if (choice == 4) {
             queue.saveAllToCSV(filename);
@@ -321,17 +366,8 @@ int main() {
             int ch;
             cin >> ch;
             cin.ignore();
-            if (ch == 1 || ch == 2 || ch == 3) {
-                if (ch == 1) queue.display();
-                else if (ch == 2) queue.checkIn(currentPlayerID);
-                else if (ch == 3) queue.withdraw(currentPlayerID);
-            } else if (ch == 4) {
-                queue.saveAllToCSV(filename);
-                cout << "Exiting player mode.\n";
-                break;
-            } else {
-                cout << "Invalid choice.\n";
-            }
+            if (ch == 1) queue.displayPlayer(currentPlayerID); 
+            
         }
     }
     return 0;
