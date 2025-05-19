@@ -6,7 +6,6 @@
 #include <sstream>
 using namespace std;
 
-// ------ Player Node (Linked List Node) ------
 struct Player {
     int playerID;
     string username;
