@@ -228,7 +228,56 @@ public:
         cout << "Player ID not found.\n";
     }
 
+    void editPlayerInfo(int id) {
+        if (!front) return;
+        Player* curr = front;
+        do {
+            if (curr->playerID == id) {
+                string newUsername, newUniversity, rankStr;
+                int newRank;
 
+                cout << "\nEditing Your Info:\n";
+
+                // Edit username
+                while (true) {
+                    cout << "Enter new username (leave blank to keep \"" << curr->username << "\"): ";
+                    getline(cin, newUsername);
+                    if (newUsername.empty()) break;
+                    curr->username = newUsername;
+                    break;
+                }
+
+                // Edit rank
+                while (true) {
+                    cout << "Enter new rank (current: " << curr->rank << "): ";
+                    getline(cin, rankStr);
+                    if (rankStr.empty()) break;
+                    bool valid = all_of(rankStr.begin(), rankStr.end(), ::isdigit);
+                    if (!valid) {
+                        cout << "Rank must be a number.\n";
+                        continue;
+                    }
+                    newRank = stoi(rankStr);
+                    curr->rank = newRank;
+                    break;
+                }
+
+                // Edit university
+                while (true) {
+                    cout << "Enter new university (leave blank to keep \"" << curr->university << "\"): ";
+                    getline(cin, newUniversity);
+                    if (newUniversity.empty()) break;
+                    curr->university = newUniversity;
+                    break;
+                }
+
+                cout << "Info updated successfully.\n";
+                return;
+            }
+            curr = curr->next;
+        } while (curr != front);
+        cout << "Player ID not found.\n";
+    }
 };
 
 int main() {
@@ -300,7 +349,7 @@ int main() {
     while (running) {
         if (userRole == "admin") {
             cout << "\n--- Admin Menu ---\n";
-            cout << "1. Register Player\n2. Display All Players\n3. Check-In Player\n4. Withdraw Player\n5. Exit\nEnter choice: ";
+            cout << "1. Register Player\n2. Display All Players\n3. Check-In Player\n4. Withdraw Player\n5. Edit Player Info\n6. Exit\nEnter choice: ";
             int ch, id, rank;
             string name, uni;
             cin >> ch;
@@ -352,21 +401,49 @@ int main() {
             } else if (ch == 4) {
                 cout << "Enter Player ID to withdraw: "; cin >> id;
                 queue.withdraw(id);
-            } else if (ch == 5) {
+            } else if (ch == 6) {
                 queue.saveAllToCSV(filename);
                 cout << "Exiting admin mode.\n";
                 break;
+            } else if (ch == 5) {
+                cout << "Enter Player ID to edit: ";
+                cin >> id;
+                cin.ignore();
+                if (queue.exists(id)) {
+                    queue.editPlayerInfo(id);
+                    queue.saveAllToCSV(filename);
+                } else {
+                    cout << "Player ID not found.\n";
+                }
             } else {
                 cout << "Invalid choice.\n";
             }
         }
         else if (userRole == "player") {
             cout << "\n--- Player Menu ---\n";
-            cout << "1. View My Info\n2. Check-In\n3. Withdraw\n4. Exit\nEnter choice: ";
+            cout << "1. View My Info\n2. Check-In\n3. Withdraw\n4. Edit Info\n5. Exit\nEnter choice: ";
             int ch;
             cin >> ch;
             cin.ignore();
-            if (ch == 1) queue.displayPlayer(currentPlayerID); 
+            if (ch == 1) {
+                queue.displayPlayer(currentPlayerID); 
+            }
+            else if (ch == 2) {
+                queue.checkIn(currentPlayerID);
+            } else if (ch == 3) {
+                queue.withdraw(currentPlayerID);
+                queue.saveAllToCSV(filename);
+                cout << "You have been withdrawn. Exiting player mode.\n";
+                break;
+            } else if (ch == 5) {
+                queue.saveAllToCSV(filename);
+                cout << "Exiting player mode.\n";
+                break;
+            } else if (ch == 4) {
+                queue.editPlayerInfo(currentPlayerID);
+            }else {
+                cout << "Invalid choice.\n";
+            }
             
         }
     }
