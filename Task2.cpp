@@ -284,7 +284,7 @@ public:
     void updateTournamentStatus() {
         if (!front) return;
 
-        // Step 1: Collect all players into an array
+        // Collect all players into an array
         Player* playerList[200]; // assume max 200 players
         int count = 0;
         Player* curr = front;
@@ -294,7 +294,7 @@ public:
             curr = curr->next;
         } while (curr != front);
 
-        // Step 2: Time parser that cleans up \r or other trailing characters
+        // Time parser that cleans up \r or other trailing characters
         auto parseTime = [](const string& timeStr) -> time_t {
             struct tm t = {};
             string cleanedTime = timeStr;
@@ -302,13 +302,13 @@ public:
             istringstream ss(cleanedTime);
             ss >> get_time(&t, "%Y-%m-%d %H:%M:%S");
             if (ss.fail()) {
-                cout << "⚠️ Failed to parse time: [" << timeStr << "]\n";
+                cout << "Failed to parse time: [" << timeStr << "]\n";
                 return time(0);
             }
             return mktime(&t);
         };
 
-        // Step 3: Sort players by wildcard priority, then registration time
+        // Sort players by wildcard priority, then registration time
         for (int i = 0; i < count - 1; ++i) {
             int minIndex = i;
             for (int j = i + 1; j < count; ++j) {
@@ -332,12 +332,12 @@ public:
             }
         }
 
-        // Step 4: Update inTournament flags
+        // Update inTournament flags
         for (int i = 0; i < count; ++i) {
             playerList[i]->inTournament = (i < maxSize); // top 12 get in
         }
 
-        // Step 5: Rebuild circular linked list in new order
+        // ebuild circular linked list in new order
         for (int i = 0; i < count - 1; ++i) {
             playerList[i]->next = playerList[i + 1];
         }
