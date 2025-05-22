@@ -109,6 +109,7 @@ public:
         }
         size++;
         cout << "Player \"" << username << "\" registered with ID: " << newPlayer->playerID << endl;
+        updateTournamentStatus();
     }
 
     void display() {
@@ -181,6 +182,7 @@ public:
                 }
                 cout << "Player ID " << id << " withdrawn.\n";
                 size--;
+                updateTournamentStatus();
                 return;
             }
             prev = curr;
@@ -278,12 +280,81 @@ public:
         } while (curr != front);
         cout << "Player ID not found.\n";
     }
+
+    void updateTournamentStatus() {
+        if (!front) return;
+
+        // Step 1: Collect all players into an array
+        Player* playerList[200]; // assume max 200 players
+        int count = 0;
+        Player* curr = front;
+
+        do {
+            playerList[count++] = curr;
+            curr = curr->next;
+        } while (curr != front);
+
+        // Step 2: Time parser that cleans up \r or other trailing characters
+        auto parseTime = [](const string& timeStr) -> time_t {
+            struct tm t = {};
+            string cleanedTime = timeStr;
+            cleanedTime.erase(remove(cleanedTime.begin(), cleanedTime.end(), '\r'), cleanedTime.end());
+            istringstream ss(cleanedTime);
+            ss >> get_time(&t, "%Y-%m-%d %H:%M:%S");
+            if (ss.fail()) {
+                cout << "⚠️ Failed to parse time: [" << timeStr << "]\n";
+                return time(0);
+            }
+            return mktime(&t);
+        };
+
+        // Step 3: Sort players by wildcard priority, then registration time
+        for (int i = 0; i < count - 1; ++i) {
+            int minIndex = i;
+            for (int j = i + 1; j < count; ++j) {
+                bool aIsWildcard = playerList[j]->isWildcard;
+                bool bIsWildcard = playerList[minIndex]->isWildcard;
+
+                if (aIsWildcard && !bIsWildcard) {
+                    minIndex = j;
+                } else if (aIsWildcard == bIsWildcard) {
+                    time_t timeA = parseTime(playerList[j]->registrationTime);
+                    time_t timeB = parseTime(playerList[minIndex]->registrationTime);
+                    if (timeA < timeB) {
+                        minIndex = j;
+                    }
+                }
+            }
+            if (minIndex != i) {
+                Player* temp = playerList[i];
+                playerList[i] = playerList[minIndex];
+                playerList[minIndex] = temp;
+            }
+        }
+
+        // Step 4: Update inTournament flags
+        for (int i = 0; i < count; ++i) {
+            playerList[i]->inTournament = (i < maxSize); // top 12 get in
+        }
+
+        // Step 5: Rebuild circular linked list in new order
+        for (int i = 0; i < count - 1; ++i) {
+            playerList[i]->next = playerList[i + 1];
+        }
+        playerList[count - 1]->next = playerList[0];
+
+        front = playerList[0];
+        rear = playerList[count - 1];
+    }
+
+
 };
 
 int main() {
     CircularQueue queue;
     string filename = "player.csv";
     queue.loadFromCSV(filename);
+    queue.updateTournamentStatus();
 
     bool running = true;
     string userRole = "";
@@ -411,7 +482,7 @@ int main() {
                 cin.ignore();
                 if (queue.exists(id)) {
                     queue.editPlayerInfo(id);
-                    queue.saveAllToCSV(filename);
+                    // queue.saveAllToCSV(filename);
                 } else {
                     cout << "Player ID not found.\n";
                 }
