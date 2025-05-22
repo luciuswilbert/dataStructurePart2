@@ -347,7 +347,6 @@ public:
         rear = playerList[count - 1];
     }
 
-
 };
 
 int main() {
