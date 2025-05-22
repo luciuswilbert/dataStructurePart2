@@ -442,7 +442,7 @@ int main() {
             } else if (ch == 4) {
                 queue.editPlayerInfo(currentPlayerID);
             }else {
-                cout << "Invalid choice.\n";
+                cout << "Invalid choice!\n";
             }
             
         }
