@@ -337,7 +337,7 @@ public:
             playerList[i]->inTournament = (i < maxSize); // top 12 get in
         }
 
-        // ebuild circular linked list in new order
+        // Rebuild circular linked list in new order
         for (int i = 0; i < count - 1; ++i) {
             playerList[i]->next = playerList[i + 1];
         }
