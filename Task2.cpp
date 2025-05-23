@@ -442,6 +442,35 @@ public:
         }
         return false;
     }
+    void displayWildcards() {
+        if (!head) {
+            cout << "No wildcard entries.\n";
+            return;
+        }
+
+        Wildcard* curr = head;
+
+        cout << "\n" << string(90, '=') << "\n";
+        cout << "| " << setw(12) << left << "Coupon Code"
+            << "| " << setw(20) << left << "Username"
+            << "| " << setw(6)  << left << "Rank"
+            << "| " << setw(20) << left << "University"
+            << "| " << setw(10) << left << "Used"
+            << "|\n";
+        cout << string(90, '-') << "\n";
+
+        while (curr) {
+            cout << "| " << setw(12) << left << curr->code
+                << "| " << setw(20) << left << curr->username
+                << "| " << setw(6)  << left << curr->rank
+                << "| " << setw(20) << left << curr->university
+                << "| " << setw(10) << left << (curr->used ? "Yes" : "No")
+                << "|\n";
+            curr = curr->next;
+        }
+
+        cout << string(90, '=') << "\n";
+    }
 };
 
 int main() {
@@ -544,7 +573,7 @@ int main() {
     while (running) {
         if (userRole == "admin") {
             cout << "\n--- Admin Menu ---\n";
-            cout << "1. Register Player\n2. Display All Players\n3. Check-In Player\n4. Withdraw Player\n5. Edit Player Info\n6. Make Wildcard\n7. Exit\nEnter choice: ";
+            cout << "1. Register Player\n2. Display All Players\n3. Check-In Player\n4. Withdraw Player\n5. Edit Player Info\n6. Make Wildcard\n7. View All Wildcard Entries\n8. Exit\nEnter choice: ";
             int ch, id, rank;
             string name, uni;
             cin >> ch;
@@ -596,7 +625,7 @@ int main() {
             } else if (ch == 4) {
                 cout << "Enter Player ID to withdraw: "; cin >> id;
                 queue.withdraw(id);
-            } else if (ch == 7) {
+            } else if (ch == 8) {
                 queue.saveAllToCSV(filename);
                 wildcardQueue.saveToCSV("wildcard.csv");
                 cout << "Exiting admin mode.\n";
@@ -626,6 +655,8 @@ int main() {
                 } else {
                     cout << "Player ID not found.\n";
                 }
+            } else if (ch == 7) {
+                wildcardQueue.displayWildcards();
             } else {
                 cout << "Invalid choice.\n";
             }
