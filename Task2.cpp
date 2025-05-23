@@ -346,12 +346,110 @@ public:
         front = playerList[0];
         rear = playerList[count - 1];
     }
+};
+struct Wildcard {
+    string code;
+    string username;
+    int rank;
+    string university;
+    bool used;
+    Wildcard* next;
 
+    Wildcard(string c, string u, int r, string uni, bool isUsed)
+        : code(c), username(u), rank(r), university(uni), used(isUsed), next(nullptr) {}
+};
+
+class WildcardQueue {
+private:
+    Wildcard* head = nullptr;
+
+public:
+    void loadFromCSV(const string& filename) {
+        ifstream file(filename);
+        if (!file.is_open()) return;
+
+        string line;
+        while (getline(file, line)) {
+            stringstream ss(line);
+            string code, username, rankStr, university, usedStr;
+            getline(ss, code, ',');
+            getline(ss, username, ',');
+            getline(ss, rankStr, ',');
+            getline(ss, university, ',');
+            getline(ss, usedStr, ',');
+
+            int rank = stoi(rankStr);
+            bool used = (usedStr == "1");
+
+            addWildcard(code, username, rank, university, used, false); // don't print
+        }
+        file.close();
+    }
+
+    void saveToCSV(const string& filename) {
+        ofstream file(filename, ios::trunc);
+        Wildcard* curr = head;
+        while (curr) {
+            file << curr->code << "," << curr->username << "," << curr->rank << ","
+                << curr->university << "," << (curr->used ? "1" : "0") << "\n";
+            curr = curr->next;
+        }
+        file.close();
+    }
+
+    void addWildcard(string code, string username, int rank, string university, bool used = false, bool showConfirm = true) {
+        Wildcard* newNode = new Wildcard(code, username, rank, university, used);
+
+        if (!head || rank < head->rank) {
+            newNode->next = head;
+            head = newNode;
+        } else {
+            Wildcard* curr = head;
+            while (curr->next && curr->next->rank <= rank) {
+                curr = curr->next;
+            }
+            newNode->next = curr->next;
+            curr->next = newNode;
+        }
+
+        if (showConfirm) {
+            cout << "Wildcard for " << username << " (Code: " << code << ") added.\n";
+        }
+    }
+
+    bool redeemWildcard(const string& code, string& username, int& rank, string& university) {
+        Wildcard* curr = head;
+        Wildcard* prev = nullptr;
+
+        while (curr) {
+            if (curr->code == code && !curr->used) {
+                // Extract info
+                username = curr->username;
+                rank = curr->rank;
+                university = curr->university;
+
+                // Remove the used node from the list
+                if (prev) {
+                    prev->next = curr->next;
+                } else {
+                    head = curr->next;
+                }
+                delete curr;
+                return true;
+            }
+            prev = curr;
+            curr = curr->next;
+        }
+        return false;
+    }
 };
 
 int main() {
     CircularQueue queue;
+    WildcardQueue wildcardQueue;
     string filename = "player.csv";
+    wildcardQueue.loadFromCSV("wildcard.csv");
+
     queue.loadFromCSV(filename);
     queue.updateTournamentStatus();
 
@@ -382,16 +480,42 @@ int main() {
             }
         }
         else if (choice == 2) {
-            string name, university;
-            int rank;
-            cout << "Enter username: ";
-            getline(cin, name);
-            cout << "Enter rank: ";
-            cin >> rank;
+            cout << "\nPlayer Registration:\n";
+            cout << "1. Normal Registration\n";
+            cout << "2. Wildcard Registration\n";
+            cout << "Enter choice: ";
+            int regType;
+            cin >> regType;
             cin.ignore();
-            cout << "Enter university: ";
-            getline(cin, university);
-            queue.enqueue(name, rank, university);
+
+            if (regType == 1) {
+                string name, uni;
+                int rank;
+                cout << "Enter username: ";
+                getline(cin, name);
+                cout << "Enter rank: ";
+                cin >> rank;
+                cin.ignore();
+                cout << "Enter university: ";
+                getline(cin, uni);
+                queue.enqueue(name, rank, uni);
+            }
+            else if (regType == 2) {
+                string code, name, uni;
+                int rank;
+                cout << "Enter your wildcard coupon code: ";
+                getline(cin, code);
+
+                if (wildcardQueue.redeemWildcard(code, name, rank, uni)) {
+                    queue.enqueue(name, rank, uni, true); // isWildcard = true
+                    cout << "Registered via wildcard.\n";
+                } else {
+                    cout << "Invalid or already used coupon code.\n";
+                }
+            }
+            else {
+                cout << "Invalid choice.\n";
+            }
         }
         else if (choice == 3) {
             cout << "Enter your Player ID: ";
@@ -408,6 +532,7 @@ int main() {
         }
         else if (choice == 4) {
             queue.saveAllToCSV(filename);
+            wildcardQueue.saveToCSV("wildcard.csv");
             cout << "Exiting program.\n";
             return 0;
         }
@@ -419,7 +544,7 @@ int main() {
     while (running) {
         if (userRole == "admin") {
             cout << "\n--- Admin Menu ---\n";
-            cout << "1. Register Player\n2. Display All Players\n3. Check-In Player\n4. Withdraw Player\n5. Edit Player Info\n6. Exit\nEnter choice: ";
+            cout << "1. Register Player\n2. Display All Players\n3. Check-In Player\n4. Withdraw Player\n5. Edit Player Info\n6. Make Wildcard\n7. Exit\nEnter choice: ";
             int ch, id, rank;
             string name, uni;
             cin >> ch;
@@ -471,10 +596,26 @@ int main() {
             } else if (ch == 4) {
                 cout << "Enter Player ID to withdraw: "; cin >> id;
                 queue.withdraw(id);
-            } else if (ch == 6) {
+            } else if (ch == 7) {
                 queue.saveAllToCSV(filename);
+                wildcardQueue.saveToCSV("wildcard.csv");
                 cout << "Exiting admin mode.\n";
                 break;
+            } else if (ch == 6) {
+                string code, name, uni;
+                int rank;
+
+                cout << "Enter coupon code (no spaces): ";
+                getline(cin, code);
+                cout << "Enter username: ";
+                getline(cin, name);
+                cout << "Enter rank: ";
+                cin >> rank;
+                cin.ignore();
+                cout << "Enter university: ";
+                getline(cin, uni);
+
+                wildcardQueue.addWildcard(code, name, rank, uni);
             } else if (ch == 5) {
                 cout << "Enter Player ID to edit: ";
                 cin >> id;
@@ -508,6 +649,7 @@ int main() {
             } else if (ch == 5) {
                 queue.saveAllToCSV(filename);
                 cout << "Exiting player mode.\n";
+                wildcardQueue.saveToCSV("wildcard.csv");
                 break;
             } else if (ch == 4) {
                 queue.editPlayerInfo(currentPlayerID);
