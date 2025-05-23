@@ -658,7 +658,7 @@ int main() {
             } else if (ch == 7) {
                 wildcardQueue.displayWildcards();
             } else {
-                cout << "Invalid choice.\n";
+                cout << "Invalid choice!\n";
             }
         }
         else if (userRole == "player") {
